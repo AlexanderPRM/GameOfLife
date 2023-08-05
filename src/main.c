@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <curses.h>
 #include <unistd.h>
 
 #define ROW 25
 #define COL 80
-#define CELL "\xF0\x9F\xA6\xA0"
-#define FIRST_SPEED 50000
+#define CELL "0"
+#define FIRST_SPEED 500000
 #define SECOND_SPEED 100000
-#define THIRD_SPEED 500000
+#define THIRD_SPEED 50000
 
 void get_dynamic_matrix(int ***matrix, int row, int col, int *no_err, int *is_alloc);
 void free_dynamic_matrix(int **matrix, int *is_alloc);
@@ -16,15 +17,29 @@ void render_screen(int **matrix, int row, int col, int *no_err);
 void update(int **field, int **next);
 int count_neighbors(int **field, int x, int y);
 
-int main(int argc, char **argv) {
+int main() {
+
     int no_err = 1;
     int is_alloc = 0;
     int **matrix;
     int row = ROW, col = COL;
+    int speed = FIRST_SPEED;
+
 
     get_dynamic_matrix(&matrix, row, col, &no_err, &is_alloc);
     input(matrix, row, col, &no_err);
-    if (no_err || argc > 2) {
+
+    FILE *s = freopen("/dev/tty", "r", stdin);
+    printf("%d", s);
+
+    initscr();
+    cbreak();
+    noecho();
+    nodelay(stdscr, TRUE);
+    keypad(stdscr, TRUE);
+
+    char ch;
+    if (no_err) {
         int **next = malloc(row * col * sizeof(int) + row * sizeof(int *));
         int *ptr = (int *)(next + row);
 
@@ -32,34 +47,35 @@ int main(int argc, char **argv) {
             next[i] = ptr + col * i;
         }
         while (1) {
-            int speed, correct_speed = 0;
-            if (*argv[1] == '1') {
+            ch = getch();
+
+            if (ch == '1') {
                 speed = FIRST_SPEED;
-                correct_speed = 1;
             }
-            if (*argv[1] == '2') {
+            if (ch == '2') {
                 speed = SECOND_SPEED;
-                correct_speed = 1;
             }
-            if (*argv[1] == '3') {
-                speed = SECOND_SPEED;
-                correct_speed = 1;
+            if (ch == '3') {
+                speed = THIRD_SPEED;
             }
-            if (correct_speed == 1) {
-                render_screen(matrix, row, col, &no_err);
-                update(matrix, next);
-                usleep(speed);
-            } else {
-                printf("Скорость хуйня, куда еще медленее? Иди нахуй.");
-                return 0;
+            if (ch == 'q' || ch == 'Q') {
+                break;
             }
+
+            erase();
+            render_screen(matrix, row, col, &no_err);
+            update(matrix, next);
+            usleep(speed);
         }
         free(next);
         
     } else {
-        printf("Данные хуйня. Поешь говна.");
+        printw("Данные хуйня. Поешь говна.");
     }
+
     free_dynamic_matrix(matrix, &is_alloc);
+    endwin();
+    fclose(s);
     return 0;
 }
 
@@ -107,12 +123,12 @@ void render_screen(int **matrix, int row, int col, int *no_err) {
   for (y = 0; y < row; y++) {
     for (x = 0; x < col; x++) {
         if (matrix[y][x] == 1) {
-            printf(CELL);
+            printw(CELL);
         } else {
-            printf(" ");
+            printw(" ");
         }
     }
-    printf("\n");
+    printw("\n");
   }
 }
 
