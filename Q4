@@ -1,0 +1,69 @@
+#ifndef DATA_IO_H
+#define DATA_IO_H
+
+#define scanf_double(input, no_err) ({ \
+    if (no_err) { \
+        char temp = '\0'; \
+        if (scanf("%lf%c", &input, &temp) < 1) { \
+            no_err = 0; \
+        } \
+        if (temp != '\0' && temp != '\n' && temp != ' ') { \
+            no_err = 0; \
+        } \
+    } \
+}) \
+
+#define scanf_int(size, no_err) ({ \
+    if (no_err) { \
+        char temp = '\0'; \
+        if (scanf("%d%c", &size, &temp) < 1) { \
+            no_err = 0; \
+        } \
+        if (temp != '\0' && temp != '\n' && temp != ' ') { \
+            no_err = 0; \
+        } \
+        if (size < 0) { \
+            no_err = 0; \
+        } \
+    } \
+}) \
+
+#define output(data, size, no_err) ({ \
+        for (int i = 0; i < size && no_err; i++) { \
+            printf("%.2lf", data[i]); \
+            if (i != size - 1) { \
+                printf(" "); \
+            } \
+        } \
+}) \
+
+#define input(data, size, no_err) ({ \
+        for (int i = 0; (no_err) && (i < size); i++) { \
+            scanf_double(data[i], no_err); \
+        } \
+}) \
+
+#define get_array(data, size, no_err, is_alloc) ({ \
+    if (no_err) { \
+        data = malloc(size * sizeof(double)); \
+        is_alloc = 1; \
+    } \
+}) \
+
+#endif
+
+
+//////////////////////////
+
+
+#ifdef MACRO
+    #include "../data_libs/data_io_macro.h"
+#else  
+    #include "../data_libs/data_io.h" 
+#endif 
+
+\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+
+build_with_macro: main_executable_module.o data_process.o data_stat.o decision.o 
+	$(CC) main_executable_module.o ../data_libs/data_io.o ../data_module/data_process.o ../data_libs/data_stat.o ../yet_another_decision_module/decision.o -DMACRO -o $(EXEC4)
